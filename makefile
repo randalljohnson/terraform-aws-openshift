@@ -3,6 +3,7 @@ infrastructure:
 	terraform init && terraform get && terraform apply
 
 # Installs OpenShift on the cluster.
+#TODO:// Convert all of these to ansible
 openshift:
 	# Add our identity for ssh, add the host key to avoid having to accept the
 	# the host key manually. Also add the identity of each node to the bastion.
@@ -14,6 +15,12 @@ openshift:
 
 	# Copy our inventory to the master and run the install script.
 	scp ./inventory.cfg ec2-user@$$(terraform output bastion-public_dns):~
+
+	cat ./scripts/preinstall-ocp-v36-host-preparation.sh | ssh -A ec2-user@$$(terraform output bastion-public_dns)
+	cat ./scripts/preinstall-ocp-v36-host-preparation.sh | ssh -A ec2-user@$$(terraform output bastion-public_dns) ssh master.openshift.local
+	cat ./scripts/preinstall-ocp-v36-host-preparation.sh | ssh -A ec2-user@$$(terraform output bastion-public_dns) ssh node1.openshift.local
+	cat ./scripts/preinstall-ocp-v36-host-preparation.sh | ssh -A ec2-user@$$(terraform output bastion-public_dns) ssh node2.openshift.local
+
 	cat install-from-bastion.sh | ssh -o StrictHostKeyChecking=no -A ec2-user@$$(terraform output bastion-public_dns)
 
 	# Now the installer is done, run the postinstall steps on each host.
